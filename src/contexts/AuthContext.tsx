@@ -159,7 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
         options: {
           data: { nome },
-          emailRedirectTo: window.location.origin + '/dashboard',
+          emailRedirectTo: import.meta.env.VITE_SITE_URL || window.location.origin,
         }
       });
 
