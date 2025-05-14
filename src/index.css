@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  @apply m-0 p-0 min-h-screen bg-gray-50 text-gray-900 transition-colors duration-200 ease-in-out;
+}
+
+body.dark {
+  @apply bg-gray-900 text-gray-50;
+}
+
+.cashpilot-card {
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-md transition-all duration-200 hover:shadow-lg;
+}
+
+.cashpilot-input {
+  @apply w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+    bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+    focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+    transition-all duration-200;
+}
+
+.cashpilot-button-primary {
+  @apply px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg
+    transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]
+    focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50;
+}
+
+.cashpilot-button-secondary {
+  @apply px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 
+    text-gray-900 dark:text-white font-medium rounded-lg transition-all duration-200
+    transform hover:scale-[1.02] active:scale-[0.98]
+    focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50;
+}
+
+.cashpilot-button-success {
+  @apply px-4 py-2 bg-success-500 hover:bg-success-600 text-white font-medium rounded-lg
+    transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]
+    focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-opacity-50;
+}
+
+.cashpilot-button-danger {
+  @apply px-4 py-2 bg-danger-500 hover:bg-danger-600 text-white font-medium rounded-lg
+    transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]
+    focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-opacity-50;
+}
+
+/* Dashboard cards */
+.stat-card {
+  @apply cashpilot-card p-4 flex flex-col;
+}
+
+.stat-card-title {
+  @apply text-sm font-medium text-gray-500 dark:text-gray-400;
+}
+
+.stat-card-value {
+  @apply text-2xl font-semibold mt-1;
+}
+
+/* Transição de páginas */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Estilo para scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-500;
+}
