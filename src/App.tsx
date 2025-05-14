@@ -13,6 +13,7 @@ import Categories from './pages/Categories';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 import DespesasFixas from './pages/DespesasFixas';
+import EmailConfirmation from './pages/EmailConfirmation';
 
 // Layout
 import ProtectedLayout from './components/layouts/ProtectedLayout';
@@ -61,6 +62,7 @@ function App() {
         {/* Rotas públicas */}
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
         <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
+        <Route path="/auth/confirm" element={<EmailConfirmation />} />
 
         {/* Rotas protegidas */}
         <Route element={<ProtectedLayout isPageLoading={isPageLoading} />}>
