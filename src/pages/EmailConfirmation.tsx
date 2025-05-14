@@ -10,6 +10,19 @@ const EmailConfirmation = () => {
 
     useEffect(() => {
         const handleEmailConfirmation = async () => {
+            // Primeiramente, verificar se há hash na URL
+            if (location.hash && location.hash.includes('access_token')) {
+                // Se houver token de acesso, vamos verificar a sessão
+                const { data } = await supabase.auth.getSession();
+
+                if (data.session) {
+                    setMessage('Email confirmado! Redirecionando para o dashboard...');
+                    toast.success('Email confirmado com sucesso!');
+                    setTimeout(() => navigate('/dashboard'), 1000);
+                    return;
+                }
+            }
+
             // Verificar se há um hash com parâmetros de erro na URL
             const hashParams = new URLSearchParams(location.hash.substring(1));
             const error = hashParams.get('error');
@@ -24,18 +37,16 @@ const EmailConfirmation = () => {
                 return;
             }
 
-            // Se não houver erro, verificar se há uma sessão
+            // Se chegamos aqui, precisamos verificar a sessão novamente ou redirecionar
             const { data } = await supabase.auth.getSession();
 
             if (data.session) {
-                setMessage('Email confirmado! Redirecionando para o dashboard...');
-                toast.success('Email confirmado com sucesso!');
+                setMessage('Autenticado! Redirecionando para o dashboard...');
+                toast.success('Autenticação realizada com sucesso!');
                 setTimeout(() => navigate('/dashboard'), 1000);
             } else {
-                // Se não houver sessão, mas também não houver erro, é um caso onde o token foi validado
-                // mas o usuário precisa fazer login
-                setMessage('Email confirmado! Por favor, faça login para continuar.');
-                toast.success('Email confirmado! Por favor, faça login para continuar.');
+                // Se não houver sessão, redirecionar para login
+                setMessage('Por favor, faça login para continuar.');
                 setTimeout(() => navigate('/login'), 2000);
             }
         };
@@ -44,11 +55,11 @@ const EmailConfirmation = () => {
     }, [navigate, location.hash]);
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-50">
-            <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-xl shadow-md">
+        <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+            <div className="max-w-md w-full space-y-8 p-10 bg-white dark:bg-gray-800 rounded-xl shadow-md">
                 <div className="text-center">
-                    <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Confirmação de Email</h2>
-                    <p className="mt-2 text-sm text-gray-600">{message}</p>
+                    <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">Confirmação de Email</h2>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{message}</p>
                 </div>
             </div>
         </div>

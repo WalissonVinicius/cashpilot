@@ -159,7 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
         options: {
           data: { nome },
-          emailRedirectTo: `${import.meta.env.VITE_SITE_URL || window.location.origin}/auth/confirm`,
+          emailRedirectTo: `${import.meta.env.VITE_SITE_URL || window.location.origin}`,
         }
       });
 

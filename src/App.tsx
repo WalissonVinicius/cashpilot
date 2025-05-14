@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuth } from './contexts/AuthContext';
 import { useTheme } from './contexts/ThemeContext';
+import { supabase } from './lib/supabase';
+import toast from 'react-hot-toast';
 
 // Pages
 import Login from './pages/Login';
@@ -23,8 +25,35 @@ function App() {
   const { user, isLoading } = useAuth();
   const { theme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+
+  // Verificar parâmetros de autenticação na URL
+  useEffect(() => {
+    const checkHashParams = async () => {
+      // Verificar se há hash na URL (usado pelo Supabase para autenticação)
+      if (location.hash && location.hash.includes('access_token')) {
+        try {
+          // Verificar se foi estabelecida uma sessão
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            console.log('Usuário autenticado com sucesso');
+            toast.success('Email confirmado com sucesso!');
+
+            // Redirecionar para o dashboard se estiver na raiz
+            if (location.pathname === '/') {
+              setTimeout(() => navigate('/dashboard'), 500);
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao processar tokens de autenticação:', error);
+        }
+      }
+    };
+
+    checkHashParams();
+  }, [location.hash, location.pathname, navigate]);
 
   // Controle de carregamento de página
   useEffect(() => {
