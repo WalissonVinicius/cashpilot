@@ -37,16 +37,37 @@ const EmailConfirmation = () => {
                 return;
             }
 
-            // Se chegamos aqui, precisamos verificar a sessão novamente ou redirecionar
-            const { data } = await supabase.auth.getSession();
+            // Se chegamos aqui, tentar autenticar o usuário
+            try {
+                // Extrair o token do hash se possível
+                const token = hashParams.get('access_token');
 
-            if (data.session) {
-                setMessage('Autenticado! Redirecionando para o dashboard...');
-                toast.success('Autenticação realizada com sucesso!');
-                setTimeout(() => navigate('/dashboard'), 1000);
-            } else {
-                // Se não houver sessão, redirecionar para login
-                setMessage('Por favor, faça login para continuar.');
+                if (token) {
+                    // Se temos um token, tentar autenticar com ele
+                    setMessage('Autenticando...');
+                    const { data, error } = await supabase.auth.getSession();
+
+                    if (error) {
+                        console.error('Erro ao autenticar:', error);
+                        setMessage('Erro ao autenticar. Redirecionando para login...');
+                        setTimeout(() => navigate('/login'), 2000);
+                        return;
+                    }
+
+                    if (data.session) {
+                        setMessage('Autenticado! Redirecionando para o dashboard...');
+                        toast.success('Email confirmado com sucesso!');
+                        setTimeout(() => navigate('/dashboard'), 1000);
+                        return;
+                    }
+                }
+
+                // Se não conseguimos autenticar, redirecionar para login
+                setMessage('Por favor, faça login para continuar...');
+                setTimeout(() => navigate('/login'), 2000);
+            } catch (error) {
+                console.error('Erro durante confirmação:', error);
+                setMessage('Ocorreu um erro. Redirecionando para login...');
                 setTimeout(() => navigate('/login'), 2000);
             }
         };

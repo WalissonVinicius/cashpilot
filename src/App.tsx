@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 import DespesasFixas from './pages/DespesasFixas';
 import EmailConfirmation from './pages/EmailConfirmation';
+import EmailSent from './pages/EmailSent';
 
 // Layout
 import ProtectedLayout from './components/layouts/ProtectedLayout';
@@ -35,15 +36,29 @@ function App() {
       // Verificar se há hash na URL (usado pelo Supabase para autenticação)
       if (location.hash && location.hash.includes('access_token')) {
         try {
-          // Verificar se foi estabelecida uma sessão
-          const { data } = await supabase.auth.getSession();
-          if (data.session) {
-            console.log('Usuário autenticado com sucesso');
-            toast.success('Email confirmado com sucesso!');
+          // Extrair e processar parâmetros do hash
+          const hashParams = new URLSearchParams(location.hash.substring(1));
+          const token = hashParams.get('access_token');
+          const type = hashParams.get('type');
 
-            // Redirecionar para o dashboard se estiver na raiz
-            if (location.pathname === '/') {
-              setTimeout(() => navigate('/dashboard'), 500);
+          // Verificar se é confirmação de email
+          if (token && type === 'signup') {
+            // Verificar se foi estabelecida uma sessão
+            const { data, error } = await supabase.auth.getSession();
+
+            if (error) {
+              console.error('Erro ao verificar sessão:', error);
+              return;
+            }
+
+            if (data.session) {
+              console.log('Usuário autenticado após confirmação de email');
+              toast.success('Email confirmado com sucesso!');
+
+              // Redirecionar para o dashboard imediatamente
+              if (location.pathname === '/') {
+                navigate('/dashboard');
+              }
             }
           }
         } catch (error) {
@@ -92,6 +107,7 @@ function App() {
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
         <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
         <Route path="/auth/confirm" element={<EmailConfirmation />} />
+        <Route path="/auth/email-sent" element={!user ? <EmailSent /> : <Navigate to="/dashboard" />} />
 
         {/* Rotas protegidas */}
         <Route element={<ProtectedLayout isPageLoading={isPageLoading} />}>

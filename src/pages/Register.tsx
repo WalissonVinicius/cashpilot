@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, PlaneLanding, AlertCircle, ArrowLeft, ChevronRight, Sparkles, Check } from 'lucide-react';
+import { Eye, EyeOff, PlaneLanding, AlertCircle, ArrowLeft, ChevronRight, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Register = () => {
@@ -14,7 +14,6 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [passwordStrength, setPasswordStrength] = useState(0);
 
@@ -75,12 +74,12 @@ const Register = () => {
     try {
       setIsLoading(true);
       await signUp(email, password, nome);
-      setIsSuccess(true);
 
-      // Pequeno delay para mostrar a animação de sucesso antes de navegar
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1200);
+      // Armazenar o email para exibir na página de confirmação
+      localStorage.setItem('registrationEmail', email);
+
+      // Redirecionar para a página de confirmação de email
+      navigate('/auth/email-sent');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       if (errorMessage.includes('email already in use')) {
@@ -88,6 +87,7 @@ const Register = () => {
       } else {
         setError('Ocorreu um erro ao criar sua conta. Tente novamente.');
       }
+      console.error('Erro de registro:', error);
     } finally {
       setIsLoading(false);
     }
@@ -216,273 +216,254 @@ const Register = () => {
           </div>
 
           <AnimatePresence mode="wait">
-            {isSuccess ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-10"
-              >
-                <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Sparkles className="text-primary-600 dark:text-primary-400" size={24} />
+            <motion.div
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div className="flex items-center mb-6 justify-center sm:justify-start">
+                <Link
+                  to="/login"
+                  className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mr-3 transition-colors group"
+                  aria-label="Voltar para página de login"
+                >
+                  <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                </Link>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Criar uma conta</h2>
+                  <p className="text-gray-600 dark:text-gray-400">Entre com seus dados para começar</p>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Conta criada com sucesso!</h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">Estamos preparando seu dashboard...</p>
-                <div className="w-full max-w-xs mx-auto h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-primary-600 dark:bg-primary-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: 1.2, ease: "easeInOut" }}
-                  />
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <div className="flex items-center mb-6 justify-center sm:justify-start">
-                  <Link
-                    to="/login"
-                    className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mr-3 transition-colors group"
-                    aria-label="Voltar para página de login"
-                  >
-                    <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                  </Link>
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Criar sua conta</h2>
-                </div>
+              </div>
 
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="mb-6 p-4 bg-danger-50 dark:bg-danger-900/30 text-danger-700 dark:text-danger-300 rounded-lg flex items-start"
-                  >
-                    <AlertCircle size={18} className="mr-2 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm">{error}</p>
-                  </motion.div>
-                )}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mb-6 p-4 bg-danger-50 dark:bg-danger-900/30 text-danger-700 dark:text-danger-300 rounded-lg flex items-start"
+                >
+                  <AlertCircle size={18} className="mr-2 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm">{error}</p>
+                </motion.div>
+              )}
 
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <motion.div
-                    whileTap={{ scale: 0.995 }}
-                    className={`relative ${focusedField === 'nome' ? 'scale-[1.02]' : ''} transition-all duration-200`}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <motion.div
+                  whileTap={{ scale: 0.995 }}
+                  className={`relative ${focusedField === 'nome' ? 'scale-[1.02]' : ''} transition-all duration-200`}
+                >
+                  <label
+                    htmlFor="nome"
+                    className={`block text-sm font-medium mb-2 text-center sm:text-left transition-colors duration-200 ${focusedField === 'nome'
+                      ? 'text-primary-600 dark:text-primary-400'
+                      : 'text-gray-700 dark:text-gray-300'
+                      }`}
                   >
-                    <label
-                      htmlFor="nome"
-                      className={`block text-sm font-medium mb-2 text-center sm:text-left transition-colors duration-200 ${focusedField === 'nome'
-                        ? 'text-primary-600 dark:text-primary-400'
-                        : 'text-gray-700 dark:text-gray-300'
-                        }`}
+                    Nome
+                  </label>
+                  <div className={`relative rounded-lg overflow-hidden transition-all duration-300 ${focusedField === 'nome' ? 'ring-2 ring-primary-300 dark:ring-primary-700' : ''
+                    }`}>
+                    <input
+                      type="text"
+                      id="nome"
+                      className="cashpilot-input border-transparent dark:border-transparent"
+                      placeholder="Seu nome completo"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      disabled={isLoading}
+                      onFocus={() => setFocusedField('nome')}
+                      onBlur={() => setFocusedField(null)}
+                    />
+                    <div className={`absolute bottom-0 left-0 h-0.5 bg-primary-600 dark:bg-primary-500 transition-all duration-300 ${focusedField === 'nome' ? 'w-full' : 'w-0'
+                      }`}></div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileTap={{ scale: 0.995 }}
+                  className={`relative ${focusedField === 'email' ? 'scale-[1.02]' : ''} transition-all duration-200`}
+                >
+                  <label
+                    htmlFor="email"
+                    className={`block text-sm font-medium mb-2 text-center sm:text-left transition-colors duration-200 ${focusedField === 'email'
+                      ? 'text-primary-600 dark:text-primary-400'
+                      : 'text-gray-700 dark:text-gray-300'
+                      }`}
+                  >
+                    Email
+                  </label>
+                  <div className={`relative rounded-lg overflow-hidden transition-all duration-300 ${focusedField === 'email' ? 'ring-2 ring-primary-300 dark:ring-primary-700' : ''
+                    }`}>
+                    <input
+                      type="email"
+                      id="email"
+                      className="cashpilot-input border-transparent dark:border-transparent"
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={isLoading}
+                      onFocus={() => setFocusedField('email')}
+                      onBlur={() => setFocusedField(null)}
+                    />
+                    <div className={`absolute bottom-0 left-0 h-0.5 bg-primary-600 dark:bg-primary-500 transition-all duration-300 ${focusedField === 'email' ? 'w-full' : 'w-0'
+                      }`}></div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  whileTap={{ scale: 0.995 }}
+                  className={`relative ${focusedField === 'password' ? 'scale-[1.02]' : ''} transition-all duration-200`}
+                >
+                  <label
+                    htmlFor="password"
+                    className={`block text-sm font-medium mb-2 text-center sm:text-left transition-colors duration-200 ${focusedField === 'password'
+                      ? 'text-primary-600 dark:text-primary-400'
+                      : 'text-gray-700 dark:text-gray-300'
+                      }`}
+                  >
+                    Senha
+                  </label>
+                  <div className={`relative rounded-lg overflow-hidden transition-all duration-300 ${focusedField === 'password' ? 'ring-2 ring-primary-300 dark:ring-primary-700' : ''
+                    }`}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="password"
+                      className="cashpilot-input pr-10 border-transparent dark:border-transparent"
+                      placeholder="Mínimo 6 caracteres"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isLoading}
+                      onFocus={() => setFocusedField('password')}
+                      onBlur={() => setFocusedField(null)}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
-                      Nome
-                    </label>
-                    <div className={`relative rounded-lg overflow-hidden transition-all duration-300 ${focusedField === 'nome' ? 'ring-2 ring-primary-300 dark:ring-primary-700' : ''
-                      }`}>
-                      <input
-                        type="text"
-                        id="nome"
-                        className="cashpilot-input border-transparent dark:border-transparent"
-                        placeholder="Seu nome completo"
-                        value={nome}
-                        onChange={(e) => setNome(e.target.value)}
-                        disabled={isLoading}
-                        onFocus={() => setFocusedField('nome')}
-                        onBlur={() => setFocusedField(null)}
-                      />
-                      <div className={`absolute bottom-0 left-0 h-0.5 bg-primary-600 dark:bg-primary-500 transition-all duration-300 ${focusedField === 'nome' ? 'w-full' : 'w-0'
-                        }`}></div>
-                    </div>
-                  </motion.div>
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                    <div className={`absolute bottom-0 left-0 h-0.5 bg-primary-600 dark:bg-primary-500 transition-all duration-300 ${focusedField === 'password' ? 'w-full' : 'w-0'
+                      }`}></div>
+                  </div>
 
-                  <motion.div
-                    whileTap={{ scale: 0.995 }}
-                    className={`relative ${focusedField === 'email' ? 'scale-[1.02]' : ''} transition-all duration-200`}
+                  {/* Indicador de força da senha */}
+                  {password && (
+                    <div className="mt-2">
+                      <div className="flex gap-1">
+                        {[...Array(4)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < passwordStrength
+                              ? passwordStrength === 1
+                                ? 'bg-red-500'
+                                : passwordStrength === 2
+                                  ? 'bg-orange-500'
+                                  : passwordStrength === 3
+                                    ? 'bg-yellow-500'
+                                    : 'bg-green-500'
+                              : 'bg-gray-200 dark:bg-gray-700'
+                              }`}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400 text-center sm:text-left">
+                        {passwordStrength === 0 && 'Use pelo menos 6 caracteres'}
+                        {passwordStrength === 1 && 'Senha fraca'}
+                        {passwordStrength === 2 && 'Senha média'}
+                        {passwordStrength === 3 && 'Senha boa'}
+                        {passwordStrength === 4 && 'Senha forte'}
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+
+                <motion.div
+                  whileTap={{ scale: 0.995 }}
+                  className={`relative ${focusedField === 'confirmPassword' ? 'scale-[1.02]' : ''} transition-all duration-200`}
+                >
+                  <label
+                    htmlFor="confirmPassword"
+                    className={`block text-sm font-medium mb-2 text-center sm:text-left transition-colors duration-200 ${focusedField === 'confirmPassword'
+                      ? 'text-primary-600 dark:text-primary-400'
+                      : 'text-gray-700 dark:text-gray-300'
+                      }`}
                   >
-                    <label
-                      htmlFor="email"
-                      className={`block text-sm font-medium mb-2 text-center sm:text-left transition-colors duration-200 ${focusedField === 'email'
-                        ? 'text-primary-600 dark:text-primary-400'
-                        : 'text-gray-700 dark:text-gray-300'
-                        }`}
-                    >
-                      Email
-                    </label>
-                    <div className={`relative rounded-lg overflow-hidden transition-all duration-300 ${focusedField === 'email' ? 'ring-2 ring-primary-300 dark:ring-primary-700' : ''
-                      }`}>
-                      <input
-                        type="email"
-                        id="email"
-                        className="cashpilot-input border-transparent dark:border-transparent"
-                        placeholder="seu@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={isLoading}
-                        onFocus={() => setFocusedField('email')}
-                        onBlur={() => setFocusedField(null)}
-                      />
-                      <div className={`absolute bottom-0 left-0 h-0.5 bg-primary-600 dark:bg-primary-500 transition-all duration-300 ${focusedField === 'email' ? 'w-full' : 'w-0'
-                        }`}></div>
-                    </div>
-                  </motion.div>
+                    Confirmar Senha
+                  </label>
+                  <div className={`relative rounded-lg overflow-hidden transition-all duration-300 ${focusedField === 'confirmPassword' ? 'ring-2 ring-primary-300 dark:ring-primary-700' : ''
+                    }`}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="confirmPassword"
+                      className="cashpilot-input border-transparent dark:border-transparent"
+                      placeholder="Digite sua senha novamente"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      disabled={isLoading}
+                      onFocus={() => setFocusedField('confirmPassword')}
+                      onBlur={() => setFocusedField(null)}
+                    />
+                    <div className={`absolute bottom-0 left-0 h-0.5 bg-primary-600 dark:bg-primary-500 transition-all duration-300 ${focusedField === 'confirmPassword' ? 'w-full' : 'w-0'
+                      }`}></div>
 
-                  <motion.div
-                    whileTap={{ scale: 0.995 }}
-                    className={`relative ${focusedField === 'password' ? 'scale-[1.02]' : ''} transition-all duration-200`}
-                  >
-                    <label
-                      htmlFor="password"
-                      className={`block text-sm font-medium mb-2 text-center sm:text-left transition-colors duration-200 ${focusedField === 'password'
-                        ? 'text-primary-600 dark:text-primary-400'
-                        : 'text-gray-700 dark:text-gray-300'
-                        }`}
-                    >
-                      Senha
-                    </label>
-                    <div className={`relative rounded-lg overflow-hidden transition-all duration-300 ${focusedField === 'password' ? 'ring-2 ring-primary-300 dark:ring-primary-700' : ''
-                      }`}>
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        id="password"
-                        className="cashpilot-input pr-10 border-transparent dark:border-transparent"
-                        placeholder="Mínimo 6 caracteres"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        disabled={isLoading}
-                        onFocus={() => setFocusedField('password')}
-                        onBlur={() => setFocusedField(null)}
-                      />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                        onClick={() => setShowPassword(!showPassword)}
-                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                      <div className={`absolute bottom-0 left-0 h-0.5 bg-primary-600 dark:bg-primary-500 transition-all duration-300 ${focusedField === 'password' ? 'w-full' : 'w-0'
-                        }`}></div>
-                    </div>
-
-                    {/* Indicador de força da senha */}
-                    {password && (
-                      <div className="mt-2">
-                        <div className="flex gap-1">
-                          {[...Array(4)].map((_, i) => (
-                            <div
-                              key={i}
-                              className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < passwordStrength
-                                ? passwordStrength === 1
-                                  ? 'bg-red-500'
-                                  : passwordStrength === 2
-                                    ? 'bg-orange-500'
-                                    : passwordStrength === 3
-                                      ? 'bg-yellow-500'
-                                      : 'bg-green-500'
-                                : 'bg-gray-200 dark:bg-gray-700'
-                                }`}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-xs mt-1 text-gray-500 dark:text-gray-400 text-center sm:text-left">
-                          {passwordStrength === 0 && 'Use pelo menos 6 caracteres'}
-                          {passwordStrength === 1 && 'Senha fraca'}
-                          {passwordStrength === 2 && 'Senha média'}
-                          {passwordStrength === 3 && 'Senha boa'}
-                          {passwordStrength === 4 && 'Senha forte'}
-                        </p>
+                    {/* Indicador de senhas correspondentes */}
+                    {confirmPassword && (
+                      <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-opacity duration-200 ${password && confirmPassword && password === confirmPassword
+                        ? 'opacity-100'
+                        : 'opacity-0'
+                        }`}>
+                        <Check size={18} className="text-green-500" />
                       </div>
                     )}
-                  </motion.div>
+                  </div>
+                </motion.div>
 
-                  <motion.div
-                    whileTap={{ scale: 0.995 }}
-                    className={`relative ${focusedField === 'confirmPassword' ? 'scale-[1.02]' : ''} transition-all duration-200`}
-                  >
-                    <label
-                      htmlFor="confirmPassword"
-                      className={`block text-sm font-medium mb-2 text-center sm:text-left transition-colors duration-200 ${focusedField === 'confirmPassword'
-                        ? 'text-primary-600 dark:text-primary-400'
-                        : 'text-gray-700 dark:text-gray-300'
-                        }`}
+                <motion.button
+                  type="submit"
+                  className="w-full mt-8 relative overflow-hidden group"
+                  disabled={isLoading}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 group-hover:from-primary-500 group-hover:via-primary-400 group-hover:to-primary-500 transition-all duration-300"></div>
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-[radial-gradient(circle_at_50%_10%,_rgba(255,255,255,0.3),_transparent_70%)]"></div>
+                  <div className="relative px-6 py-3 text-white font-medium rounded-lg">
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Criando conta...
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center">
+                        Criar conta
+                        <ChevronRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
+                      </span>
+                    )}
+                  </div>
+                </motion.button>
+
+                <p className="mt-8 text-center text-gray-600 dark:text-gray-400">
+                  Já possui uma conta?{' '}
+                  <Link to="/login" className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium transition-colors inline-flex items-center">
+                    Entrar
+                    <motion.span
+                      animate={{ x: [0, 3, 0] }}
+                      transition={{ repeat: Infinity, repeatDelay: 4, duration: 0.6 }}
                     >
-                      Confirmar Senha
-                    </label>
-                    <div className={`relative rounded-lg overflow-hidden transition-all duration-300 ${focusedField === 'confirmPassword' ? 'ring-2 ring-primary-300 dark:ring-primary-700' : ''
-                      }`}>
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        id="confirmPassword"
-                        className="cashpilot-input border-transparent dark:border-transparent"
-                        placeholder="Digite sua senha novamente"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        disabled={isLoading}
-                        onFocus={() => setFocusedField('confirmPassword')}
-                        onBlur={() => setFocusedField(null)}
-                      />
-                      <div className={`absolute bottom-0 left-0 h-0.5 bg-primary-600 dark:bg-primary-500 transition-all duration-300 ${focusedField === 'confirmPassword' ? 'w-full' : 'w-0'
-                        }`}></div>
+                      <ChevronRight size={16} className="ml-1" />
+                    </motion.span>
+                  </Link>
+                </p>
+              </form>
 
-                      {/* Indicador de senhas correspondentes */}
-                      {confirmPassword && (
-                        <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-opacity duration-200 ${password && confirmPassword && password === confirmPassword
-                          ? 'opacity-100'
-                          : 'opacity-0'
-                          }`}>
-                          <Check size={18} className="text-green-500" />
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-
-                  <motion.button
-                    type="submit"
-                    className="w-full mt-8 relative overflow-hidden group"
-                    disabled={isLoading}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 group-hover:from-primary-500 group-hover:via-primary-400 group-hover:to-primary-500 transition-all duration-300"></div>
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-[radial-gradient(circle_at_50%_10%,_rgba(255,255,255,0.3),_transparent_70%)]"></div>
-                    <div className="relative px-6 py-3 text-white font-medium rounded-lg">
-                      {isLoading ? (
-                        <span className="flex items-center justify-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Criando conta...
-                        </span>
-                      ) : (
-                        <span className="flex items-center justify-center">
-                          Criar conta
-                          <ChevronRight size={16} className="ml-1 transition-transform group-hover:translate-x-1" />
-                        </span>
-                      )}
-                    </div>
-                  </motion.button>
-
-                  <p className="mt-8 text-center text-gray-600 dark:text-gray-400">
-                    Já possui uma conta?{' '}
-                    <Link to="/login" className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium transition-colors inline-flex items-center">
-                      Entrar
-                      <motion.span
-                        animate={{ x: [0, 3, 0] }}
-                        transition={{ repeat: Infinity, repeatDelay: 4, duration: 0.6 }}
-                      >
-                        <ChevronRight size={16} className="ml-1" />
-                      </motion.span>
-                    </Link>
-                  </p>
-                </form>
-
-                <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-10">
-                  <p>Ao criar sua conta, você concorda com nossos <span className="underline cursor-pointer">Termos de Serviço</span> e <span className="underline cursor-pointer">Política de Privacidade</span></p>
-                </div>
-              </motion.div>
-            )}
+              <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-10">
+                <p>Ao criar sua conta, você concorda com nossos <span className="underline cursor-pointer">Termos de Serviço</span> e <span className="underline cursor-pointer">Política de Privacidade</span></p>
+              </div>
+            </motion.div>
           </AnimatePresence>
         </motion.div>
       </div>
